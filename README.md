@@ -49,5 +49,5 @@ You can easily modify the chart by:
 - [D3.js Gallery](https://observablehq.com/@d3/gallery) for examples and inspiration.
 # MY HANDS ON SIMPLE PROJECT
 Please click on the link below to check out on my d3js project and provide your comments and pull requests to take this to next level.
-https://georgemutale.github.io/D3_visualisation_project.github.io/
+[Click](https://georgemutale.github.io/D3_visualisation_project.github.io/)
 
