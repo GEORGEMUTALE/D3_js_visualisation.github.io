@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive D3.js Charts</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 90%;
+            margin-bottom: 50px;
+        }
+        .chart {
+            margin: 20px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        svg {
+            border: 1px solid black;
+        }
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            text-anchor: middle;
+            margin-bottom: 10px;
+        }
+        .legend {
+            font-size: 14px;
+            text-anchor: start;
+        }
+        .story {
+            width: 90%;
+            margin: 20px 0;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="story">
+        <h1 style="text-align: center;">D3.js LIBRARY</h1>
+        <p>
+            D3.js (Data-Driven Documents) is a JavaScript library that helps developers create dynamic, interactive, and data-driven visualizations in web browsers. Unlike other charting libraries, D3 is very powerful because it provides granular control over every aspect of a visualization, making it highly customizable. D3 manipulates HTML, SVG, and CSS to bring your data to life.
+            <br><br>
+            With D3, you can create a wide range of visualizations, including bar charts, line graphs, scatter plots, and complex hierarchical diagrams. D3 binds data to the DOM and can apply data-driven transformations to a webpage.
+        </p>
+    </div>
+    
+
+    <h1>INTERACTIVE D3js VISUALIZATIONS</h1>
+    <div class="chart-container">
+        <div id="pieChart" class="chart"></div>
+        <div id="donutChart" class="chart"></div>
+    </div>
+    <div class="chart-container">
+        <div id="lineChart" class="chart"></div>
+    </div>
+
+    <div class="story">
+        <p>Here you can add some explanatory text about the charts. Describe the data represented, key insights, and any relevant stories or observations. This section helps to provide context and make the data more understandable. The visualizations above offer a comprehensive look at the dataset, emphasizing key takeaways and comparisons.</p>
+    </div>
+
+    <script>
+        // Load data from file
+        d3.json('data/data.json').then(data => {
+            createPieChart(data.pets);
+            createDonutChart(data.animals);
+            createLineChart(data.animals, data.households);
+        });
+
+   // Pie Chart
+function createPieChart(data) {
+    const width = 600, height = 400, radius = Math.min(width, height) / 2;
+    const margin = { top: 50, right: 200, bottom: 50, left: 50 };
+
+    const svg = d3.select("#pieChart").append("svg")
+        .attr("width", width + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${(width + margin.right) / 2}, ${(height + margin.top) / 2 + 20})`); // Move down 20px
+
+    const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+    const pie = d3.pie()
+        .value(d => d.value)
+        .sort(null);
+
+    const arc = d3.arc()
+        .innerRadius(0)
+        .outerRadius(radius)
+        .padAngle(0.02) // Add separation between slices
+        .cornerRadius(5); // Rounded corners for smoothness
+
+    const arcs = svg.selectAll(".arc")
+        .data(pie(data))
+        .enter()
+        .append("g")
+        .attr("class", "arc")
+        .attr("filter", "url(#shadow)"); // Apply shadow effect
+
+    // Add shadow filter definition
+    svg.append("defs")
+        .append("filter")
+        .attr("id", "shadow")
+        .append("feDropShadow")
+        .attr("dx", 2)
+        .attr("dy", 2)
+        .attr("stdDeviation", 2);
+
+    // Add pie chart sections with shadow and separation
+    arcs.append("path")
+        .attr("d", arc)
+        .attr("fill", d => color(d.data.name))
+        .style("stroke", "white")
+        .style("stroke-width", "2px")
+        .style("cursor", "pointer");
+
+    // Add percentages to the pie slices
+    arcs.append("text")
+        .attr("transform", d => `translate(${arc.centroid(d)})`)
+        .attr("dy", "0.35em")
+        .style("text-anchor", "middle")
+        .style("font-size", "14px")
+        .style("font-weight", "bold")
+        .text(d => `${Math.round((d.data.value / d3.sum(data, d => d.value)) * 100)}%`)
+        .attr("fill", "white");  // Ensure percentage text is visible
+
+    // Title
+    svg.append("text")
+        .attr("class", "title")
+        .attr("x", 0)
+        .attr("y", -radius - 10)  // Move the title higher above the chart
+        .attr("text-anchor", "middle")
+        .style("font-size", "20px")  // Larger font for better visibility
+        .style("font-weight", "bold")  // Bold title for prominence
+        .text("PERCENTAGE OF PETS");
+
+    // Legend
+    const legend = svg.append("g")
+        .attr("transform", `translate(${radius + 10}, -${radius - 20})`);
+
+    const legendItems = legend.selectAll(".legend-item")
+        .data(data)
+        .enter()
+        .append("g")
+        .attr("class", "legend-item")
+        .attr("transform", (d, i) => `translate(0, ${i * 25})`);
+
+    legendItems.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", 15)
+        .attr("height", 15)
+        .style("fill", d => color(d.name));
+
+    legendItems.append("text")
+        .attr("x", 20)
+        .attr("y", 12)
+        .text(d => d.name)
+        .style("font-size", "12px")
+        .style("text-anchor", "start");
+
+    // Add shadow effect for pie sections
+    svg.selectAll("path")
+        .on("mouseover", function () {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr("transform", function (d) {
+                    const [x, y] = arc.centroid(d);
+                    return `translate(${x * 0.1}, ${y * 0.1})`; // Separate on hover
+                })
+                .attr("filter", "url(#shadow)"); // Apply shadow on hover
+        })
+        .on("mouseout", function () {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr("transform", "translate(0,0)"); // Return to original state
+        });
+}
+
+ // Updated Donut Chart for Animal Distribution
+function createDonutChart(data) {
+    const width = 400, height = 400, radius = Math.min(width, height) / 2;
+    const thickness = 0.6;  // Control the thickness of the donut
+
+    // Create container SVG
+    const containerSvg = d3.select("#donutChart").append("svg")
+        .attr("width", width + 200)
+        .attr("height", height + 80);
+
+    // Add title
+    containerSvg.append("text")
+        .attr("x", (width + 100) / 2)
+        .attr("y", 30)
+        .attr("text-anchor", "middle")
+        .style("font-size", "16px")
+        .style("font-weight", "bold")
+        .text("ANIMAL DISTRIBUTION");
+
+    const svg = containerSvg.append("g")
+        .attr("transform", `translate(${width / 2 + 50},${height / 2 + 40})`);
+
+    const color = d3.scaleOrdinal(d3.schemeCategory10);
+    const pie = d3.pie().value(d => d.value).padAngle(0.02);
+
+    const arc = d3.arc()
+        .innerRadius(radius * thickness) // Thicker inner radius
+        .outerRadius(radius);
+
+    // Append slices
+    const slices = svg.selectAll("path")
+        .data(pie(data))
+        .enter()
+        .append("path")
+        .attr("d", arc)
+        .attr("fill", d => color(d.data.name))
+        .style("stroke", "white")
+        .style("stroke-width", "2px")
+        .style("cursor", "pointer");
+
+    // Center text for dynamic description
+    const centerText = svg.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dy", "0.35em")
+        .style("font-size", "16px")
+        .style("font-weight", "bold");
+
+    // Tooltip
+    slices.on("mouseover", function (event, d) {
+        d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("transform", function (d) {
+                const [x, y] = arc.centroid(d);
+                return `translate(${x * 0.1}, ${y * 0.1}) scale(1.1)`;
+            });
+
+        centerText.text(`${d.data.name}: ${d.data.value}`);  // Update center text
+    })
+    .on("mouseout", function () {
+        d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("transform", "translate(0,0) scale(1)");
+        
+        centerText.text("");  // Clear center text
+    });
+
+    // Add legend beside donut chart
+    const legend = containerSvg.append("g")
+        .attr("transform", `translate(${width + 60}, 50)`);
+
+    legend.selectAll(".legend-item")
+        .data(data)
+        .enter()
+        .append("g")
+        .attr("class", "legend-item")
+        .attr("transform", (d, i) => `translate(0, ${i * 25})`)
+        .each(function(d) {
+            d3.select(this).append("rect")
+                .attr("width", 20)
+                .attr("height", 20)
+                .attr("fill", color(d.name));
+            
+            d3.select(this).append("text")
+                .attr("x", 30)
+                .attr("dy", "1em")
+                .text(d.name);
+        });
+}
+
+
+
+ // Line Chart for Animals vs Households
+function createLineChart(animals, households) {
+    const width = 600, height = 400, margin = { top: 50, right: 150, bottom: 50, left: 60 };
+    const svg = d3.select("#lineChart").append("svg")
+        .attr("width", width + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const x = d3.scaleBand()
+        .domain(animals.map(d => d.name))
+        .range([0, width - margin.right])
+        .padding(0.3);
+    
+    const y = d3.scaleLinear()
+        .domain([0, d3.max([].concat(animals, households), d => d.value)])
+        .range([height - margin.bottom, 0]);
+
+    // X and Y Axis
+    svg.append("g")
+        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x));
+    
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+    // Line generator
+    const line = d3.line()
+        .x(d => x(d.name) + x.bandwidth() / 2)
+        .y(d => y(d.value));
+
+    // Line for Animals
+    svg.append("path")
+        .data([animals])
+        .attr("d", line)
+        .attr("fill", "none")
+        .attr("stroke", "#69b3a2")
+        .attr("stroke-width", 2);
+
+    // Line for Households
+    svg.append("path")
+        .data([households])
+        .attr("d", line)
+        .attr("fill", "none")
+        .attr("stroke", "#404080")
+        .attr("stroke-width", 2);
+
+    // Tooltip
+    const tooltip = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("position", "absolute")
+        .style("background", "#f4f4f4")
+        .style("padding", "8px")
+        .style("border-radius", "4px")
+        .style("box-shadow", "0 2px 5px rgba(0, 0, 0, 0.3)")
+        .style("visibility", "hidden");
+
+    // Dots for Animals
+    svg.selectAll(".dot-animal")
+        .data(animals)
+        .enter()
+        .append("circle")
+        .attr("class", "dot-animal")
+        .attr("cx", d => x(d.name) + x.bandwidth() / 2)
+        .attr("cy", d => y(d.value))
+        .attr("r", 5)
+        .style("fill", "#69b3a2")
+        .on("mouseover", function(event, d) {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr("r", 7)
+                .style("fill", "#4a9a7e"); // Darker color on hover
+
+            tooltip.html(`<strong>Animal:</strong> ${d.name}<br><strong>Value:</strong> ${d.value}`)
+                .style("visibility", "visible")
+                .style("top", `${event.pageY - 30}px`)
+                .style("left", `${event.pageX + 10}px`);
+        })
+        .on("mousemove", function(event) {
+            tooltip.style("top", `${event.pageY - 30}px`)
+                .style("left", `${event.pageX + 10}px`);
+        })
+        .on("mouseout", function() {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr("r", 5)
+                .style("fill", "#69b3a2"); // Original color
+
+            tooltip.style("visibility", "hidden");
+        });
+
+    // Dots for Households
+    svg.selectAll(".dot-household")
+        .data(households)
+        .enter()
+        .append("circle")
+        .attr("class", "dot-household")
+        .attr("cx", d => x(d.name) + x.bandwidth() / 2)
+        .attr("cy", d => y(d.value))
+        .attr("r", 5)
+        .style("fill", "#404080")
+        .on("mouseover", function(event, d) {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr("r", 7)
+                .style("fill", "#303060"); // Darker color on hover
+
+            tooltip.html(`<strong>Household:</strong> ${d.name}<br><strong>Value:</strong> ${d.value}`)
+                .style("visibility", "visible")
+                .style("top", `${event.pageY - 30}px`)
+                .style("left", `${event.pageX + 10}px`);
+        })
+        .on("mousemove", function(event) {
+            tooltip.style("top", `${event.pageY - 30}px`)
+                .style("left", `${event.pageX + 10}px`);
+        })
+        .on("mouseout", function() {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr("r", 5)
+                .style("fill", "#404080"); // Original color
+
+            tooltip.style("visibility", "hidden");
+        });
+
+    // Title
+    svg.append("text")
+        .attr("class", "title")
+        .attr("x", (width - margin.right + 200) / 2)
+        .attr("y", -20)
+        .attr("text-anchor", "middle")
+        .text("Animals vs Households");
+
+    // Legend
+    const legend = svg.append("g")
+        .attr("transform", `translate(${width - margin.right + 20}, ${margin.top})`);
+
+    // Animals legend
+    legend.append("circle")
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .attr("r", 5)
+        .style("fill", "#69b3a2");
+
+    legend.append("text")
+        .attr("x", 15)
+        .attr("y", 5)
+        .text("Animals")
+        .style("alignment-baseline", "middle");
+
+    // Households legend
+    legend.append("circle")
+        .attr("cx", 0)
+        .attr("cy", 25)
+        .attr("r", 5)
+        .style("fill", "#404080");
+
+    legend.append("text")
+        .attr("x", 15)
+        .attr("y", 30)
+        .text("Households")
+        .style("alignment-baseline", "middle");
+}
+
+
+    </script>
+</body>
+</html>
